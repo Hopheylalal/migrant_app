@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "58631592183",
+    "firebase_url": "https://migrant-app-5f27c.firebaseio.com",
+    "project_id": "migrant-app-5f27c",
+    "storage_bucket": "migrant-app-5f27c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:58631592183:android:8b0bb29f0573bbf3801bf2",
+        "android_client_info": {
+          "package_name": "com.app.migrant_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "58631592183-6hh7oieh8jq5b7fdf5r8mmi3f01cqkip.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.app.migrant_app",
+            "certificate_hash": "543c3382bcaa48ad4bb9592fe65782fa79993748"
+          }
+        },
+        {
+          "client_id": "58631592183-4iqqn90krishijusuu2sm0qcf3mlskn5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCwiz-OEAmL7KRoNMUt9PJuOinwSnqCH4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "58631592183-4iqqn90krishijusuu2sm0qcf3mlskn5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
