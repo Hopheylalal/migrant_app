@@ -17,6 +17,7 @@ class DataController extends GetxController {
   var distanceSlider = 5.0.obs;
 
   LatLng myLocation;
+  LatLng myLocation2;
 
   setDistanceUsersListGetBuilder(list){
     distanceUsersListGetBuilder.add(list);
@@ -46,6 +47,11 @@ class DataController extends GetxController {
   setLocation(LatLng loc) {
     distanceUsersListGetBuilder.clear();
     myLocation = loc;
+    update();
+  }
+  setLocation2(LatLng loc) {
+
+    myLocation2 = loc;
     update();
   }
 

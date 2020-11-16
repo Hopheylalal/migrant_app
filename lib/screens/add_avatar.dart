@@ -73,10 +73,8 @@ class _AddAvatarState extends State<AddAvatar> {
           .update(
         {'urlAvatar': urlImg},
       ).whenComplete(() {
-        Navigator.pop(context);
-        setState(() {
-          isLoading = false;
-        });
+        Get.offAll(Home());
+
       });
     } catch (e) {
       Get.snackbar('Ошибка', e.toString());

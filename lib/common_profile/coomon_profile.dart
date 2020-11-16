@@ -13,8 +13,9 @@ import '../home.dart';
 class ProfileCommon extends StatefulWidget {
   final reciverName;
   final senderName;
+  final fromMapGetBack;
 
-  const ProfileCommon({Key key, this.reciverName, this.senderName}) : super(key: key);
+  const ProfileCommon({Key key, this.reciverName, this.senderName,this.fromMapGetBack}) : super(key: key);
   @override
   _ProfileCommonState createState() => _ProfileCommonState();
 }
@@ -166,13 +167,20 @@ class _ProfileCommonState extends State<ProfileCommon> {
 
   @override
   Widget build(BuildContext context) {
+    print(widget.fromMapGetBack);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text('Профиль'),
         centerTitle: true,
         leading: IconButton(icon: Icon(Icons.arrow_back),onPressed: (){
-          Get.off(Home());
+          if(widget.fromMapGetBack == true){
+            Get.back();
+
+          }else{
+            Get.offAll(Home());
+          }
+
         },),
       ),
       body: SingleChildScrollView(

@@ -135,7 +135,7 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
         'resiver': widget.resiverId,
         'createDate': FieldValue.serverTimestamp(),
         'resiverName': widget.resiverName,
-        'senderName': widget.senderName,
+        'senderName': currentUserName,
         'resiverAvatr': widget.resiverAvatar,
         'senderAvatar': widget.senderAvatar,
         '${widget.senderId}' : false,
@@ -171,34 +171,40 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
   void sendMessage() async {
     FocusScope.of(context).unfocus();
 
-    await _firebaseFirestore
-        .collection('chats')
-        .doc(hashChatID.toString())
-        .set({
-      'convers': [widget.senderId, widget.resiverId],
-    }).whenComplete(() {
-      _firebaseFirestore
+    if(_controller.text.isNotEmpty){
+      await _firebaseFirestore
           .collection('chats')
           .doc(hashChatID.toString())
-          .collection('messages')
-          .doc()
           .set({
-        'message': message,
-        'sender': widget.senderId,
-        'resiver': widget.resiverId,
-        'createDate': FieldValue.serverTimestamp(),
-        'resiverName': widget.resiverName,
-        'senderName': currentUserName,
-        'resiverAvatr': widget.resiverAvatar,
-        'senderAvatar': widget.senderAvatar,
-        '${widget.senderId}' : false,
-        '${widget.resiverId}' : true,
+        'convers': [widget.senderId, widget.resiverId],
+      }).whenComplete(() {
+        _firebaseFirestore
+            .collection('chats')
+            .doc(hashChatID.toString())
+            .collection('messages')
+            .doc()
+            .set({
+          'message': message,
+          'sender': widget.senderId,
+          'resiver': widget.resiverId,
+          'createDate': FieldValue.serverTimestamp(),
+          'resiverName': widget.resiverName,
+          'senderName': currentUserName,
+          'resiverAvatr': widget.resiverAvatar,
+          'senderAvatar': widget.senderAvatar,
+          '${widget.senderId}' : false,
+          '${widget.resiverId}' : true,
+        });
       });
-    });
+      _controller.clear();
+    }else{
+      print('Controller is empty!!!');
+    }
 
     // await FirebaseApi.uploadMessage(widget.idUser, message);
 
-    _controller.clear();
+
+
   }
 
   @override
@@ -244,7 +250,7 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
             ),
             SizedBox(width: 10),
             GestureDetector(
-              onTap: message.trim().isEmpty ? null : sendMessage,
+              onTap: message.trim().isEmpty && _controller.text.isEmpty ? null : sendMessage,
               child: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(

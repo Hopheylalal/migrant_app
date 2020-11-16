@@ -48,6 +48,7 @@ class _ProfileState extends State<Profile> {
       GoogleSignIn().signOut();
       print('You are sign out');
       print(_auth.currentUser);
+      Get.offAll(FirstPage());
 
     } catch (e) {
       Get.snackbar('Ошибка', e.message, snackPosition: SnackPosition.TOP);

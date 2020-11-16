@@ -7,13 +7,19 @@ import 'package:migrant_app/models/latlng_model.dart';
 
 class DataController2 extends GetxController {
 
-  RxSet<Marker> mapDocProfiles = RxSet();
+  RxSet<Marker> userMarkersSet = RxSet();
 
-  setMapDocProfiles(doc){
-    mapDocProfiles.add(doc) ;
+  RxList userSetAge = RxList();
+
+
+
+  setUserMarkersSet(doc){
+    userMarkersSet.clear();
+    userMarkersSet.add(doc) ;
   }
 
-  var distanceUsersList = [].obs;
+  var genderUsersList = [].obs;
+
   var distanceUser = 100000000.0.obs;
 
   var distanceSlider = 5.0.obs;
@@ -23,18 +29,14 @@ class DataController2 extends GetxController {
 
 
   setLocation(LatLng loc) {
-    distanceUsersList.clear();
+
     myLocation = loc;
     update();
   }
 
-  setDistance(dist) {
-    distanceUsersList.clear();
-    distanceUser.value = dist;
-  }
 
 
-  GetStorage filterSave = GetStorage();
+
   var ageControl = RangeValues(18, 100).obs;
 
   var minAge = 18.0.obs;
@@ -51,17 +53,15 @@ class DataController2 extends GetxController {
 
   setGender(genderPast) {
     gender.value = genderPast;
-    filterSave.write('gender1', genderPast);
+
   }
 
   setMinAge(age) {
     minAge.value = age;
-    filterSave.write('minAge1', age);
   }
 
   setMaxAge(age) {
     maxAge.value = age;
-    filterSave.write('maxAge1', age);
   }
 
 

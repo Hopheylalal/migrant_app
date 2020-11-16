@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_custom_dialog/flutter_custom_dialog.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:get/get_navigation/src/root/root_widget.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:migrant_app/home.dart';
 import 'package:migrant_app/screens/registration.dart';
@@ -23,8 +23,17 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  DataController _dataController = Get.put(DataController());
+
+  getMyCoordsLocator() async {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium);
+    LatLng _latLng = LatLng(position.latitude, position.longitude);
+    _dataController.setLocation2(_latLng);
+  }
   @override
   Widget build(BuildContext context) {
+    getMyCoordsLocator();
     YYDialog.init(context);
     return GetMaterialApp(
       // initialBinding: AuthBinding(),

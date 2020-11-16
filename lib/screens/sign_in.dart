@@ -10,7 +10,6 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:location/location.dart';
-import 'package:migrant_app/screens/registration.dart';
 
 import '../home.dart';
 import 'add_field_google_sigin.dart';
@@ -133,7 +132,7 @@ class _SignInState extends State<SignIn> {
       FirebaseFirestore.instance.collection('userCollection').doc(res.user.uid).update({
         'token' : token,
       });
-      Navigator.pop(context);
+      Get.offAll(Home());
     }
 
   }

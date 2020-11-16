@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_country_picker/flutter_country_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -85,6 +86,19 @@ class _RegistrationGoogleSignInState extends State<RegistrationGoogleSignIn> {
     _locationData = await location.getLocation();
   }
 
+  // getLocation() async {
+  //   try {
+  //     Position position =
+  //     await getCurrentPosition(desiredAccuracy: LocationAccuracy.medium);
+  //     print('234$position');
+  //     // startLocation = LatLng(position.latitude, position.longitude);
+  //     LatLng _startTarget = LatLng(position.latitude, position.longitude);
+  //
+  //     startCoords = _startTarget;
+  //   } catch (e) {
+  //     print(e);
+  //   }
+  // }
 
   void _validateInputs() async {
     if (_formKey.currentState.validate()) {
@@ -109,7 +123,7 @@ class _RegistrationGoogleSignInState extends State<RegistrationGoogleSignIn> {
               .collection('userCollection')
               .doc(user.uid)
               .set({
-            'geoLoc' : GeoPoint(_locationData.latitude,_locationData.longitude),
+            'geoLoc' : GeoPoint(_dataController.myLocation.latitude,_dataController.myLocation.longitude),
             'token' : token,
             'id': user.uid,
             'email': user.email,
@@ -136,7 +150,10 @@ class _RegistrationGoogleSignInState extends State<RegistrationGoogleSignIn> {
           Get.off(AddAvatar());
         }
       } catch (e) {
-        print(e);
+        print('234$e');
+        setState(() {
+          buttonEnable = true;
+        });
       }
     }
   }
