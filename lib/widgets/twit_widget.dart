@@ -15,6 +15,8 @@ class TwitWidget extends StatefulWidget {
   final countryCode;
   final userId;
   final twitId;
+  final age;
+  final country;
 
   const TwitWidget(
       {Key key,
@@ -24,7 +26,8 @@ class TwitWidget extends StatefulWidget {
       this.content,
       this.countryCode,
       this.userId,
-      this.twitId})
+      this.twitId,
+      this.age, this.country})
       : super(key: key);
 
   @override
@@ -35,6 +38,7 @@ class _TwitWidgetState extends State<TwitWidget> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   String userUid;
+  int userAge;
 
   getUserUid() {
     final userIdFuture = _auth.currentUser.uid;
@@ -42,6 +46,13 @@ class _TwitWidgetState extends State<TwitWidget> {
       userUid = userIdFuture;
     });
   }
+
+  // getUserAge()async{
+  //   final result = await FirebaseFirestore.instance.collection('userCollection').doc(widget.userId).get();
+  //   var result2 = await result.data()['age'];
+  //
+  //
+  // }
 
   deleteMyTwit() {
     if (widget.userId == userUid) {
@@ -55,7 +66,10 @@ class _TwitWidgetState extends State<TwitWidget> {
                 FirebaseFirestore.instance
                     .collection('twits')
                     .doc(widget.twitId)
-                    .delete().whenComplete(() => Get.back(),)
+                    .delete()
+                    .whenComplete(
+                      () => Get.back(),
+                    )
                     .catchError((err) {
                   print(err);
                 });
@@ -82,23 +96,35 @@ class _TwitWidgetState extends State<TwitWidget> {
     }
   }
 
+  // getUserAge()async{
+  //    FirebaseFirestore.instance
+  //       .collection('userCollection')
+  //       .doc(widget.userId).get();
+  // }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getUserUid();
+    // getUserAge();
   }
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        Get.to(ProfileCommon(), arguments: widget.userId);
+        Get.to(
+            ProfileCommon(
+              fromMapGetBack: true,
+            ),
+            arguments: widget.userId);
       },
       onLongPress: () {
         deleteMyTwit();
       },
       child: Card(
+        color: Color(0xfff0f0f0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -129,24 +155,43 @@ class _TwitWidgetState extends State<TwitWidget> {
                       children: [
                         Expanded(
                           child: Text(
-                            '${widget.name}',
+                            '${widget.name}, ${widget.age.round()}',
                             overflow: TextOverflow.fade,
                             style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          child: SizedBox(
-                            width: 30,
-                            height: 30,
-                            child: Flag(widget.countryCode),
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 5),
+                            child: SizedBox(
+                              height: 30,
+                              width: 30,
+                              child: Flag('${widget.countryCode}'),
+                            ),
+                          ),
+                          widget.country.length > 24
+                              ? Expanded(
+                            child: Text(
+                              '${widget.country}',
+                              overflow: TextOverflow.fade,
+                            ),
+                          )
+                              : Text(
+                            '${widget.country}',
+                            overflow: TextOverflow.fade,
+                          ),
+
+                        ],
+                      ),
+                    ),
                     Text(
-                      '${DateFormat('dd-MM-yyyy').format(
+                      '${DateFormat('dd-MM-yyyy  HH:mm').format(
                         widget.createDate.toDate(),
                       )}',
                       style: TextStyle(fontSize: 12),

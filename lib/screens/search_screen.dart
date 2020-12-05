@@ -35,7 +35,9 @@ class _SearchScreenState extends State<SearchScreen> {
       ..width = Get.height
       ..height = 300
       ..gravity = Gravity.top
-      ..margin = EdgeInsets.symmetric(vertical: 80)
+      ..margin = Get.size.height >= 896
+          ? EdgeInsets.symmetric(vertical: 100)
+          : EdgeInsets.symmetric(vertical: 80)
       ..widget(
         Padding(
           padding: EdgeInsets.all(0.0),
@@ -53,10 +55,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
   getMyCoordsLocator() async {
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium);
+        desiredAccuracy: LocationAccuracy.medium).catchError((err){
+          print(err);
+    });
     map.LatLng _latLng = map.LatLng(position.latitude, position.longitude);
-    userSafeLocation =_latLng;
-
+    userSafeLocation = _latLng;
   }
 
   getUserUid() {
@@ -188,7 +191,6 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-
   @override
   void initState() {
     // TODO: implement initState
@@ -220,106 +222,109 @@ class _SearchScreenState extends State<SearchScreen> {
               })
         ],
       ),
-      body: SingleChildScrollView(
-        child: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('userCollection')
-              .snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return LinearProgressIndicator();
-            }
-            if (snapshot.hasData) {
-              List users = snapshot.data.docs;
-              List result = [];
-              List resultGender = [];
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('userCollection')
+            .where('id', isNotEqualTo: currentUser)
+            .snapshots(),
+        builder:
+            (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return LinearProgressIndicator();
+          }
+          if (snapshot.hasData) {
+            _dataController.distanceUsersListGetBuilder.clear();
+            List users = snapshot.data.docs;
+            List result = [];
+            List resultGender = [];
 
-              users.forEach((element) {
-                if (element['gender'] == _dataController.gender.value &&
-                    element['gender'] != 3) {
-                  resultGender.add(element);
-                } else if (element['gender'] == 3 ||
-                    _dataController.gender.value == 3) {
-                  resultGender.add(element);
-                }
-              });
+            users.forEach((element) {
+              if (element['gender'] == _dataController.gender.value &&
+                  element['gender'] != 3) {
+                resultGender.add(element);
+              } else if (element['gender'] == 3 ||
+                  _dataController.gender.value == 3) {
+                resultGender.add(element);
+              }
+            });
 
-              resultGender.forEach((element) {
-                if (element['age'] <= _dataController.maxAge.value &&
-                    element['age'] >= _dataController.minAge.value) {
-                  result.add(element);
-                }
-              });
+            resultGender.forEach((element) {
+              if (element['age'] <= _dataController.maxAge.value &&
+                  element['age'] >= _dataController.minAge.value) {
+                result.add(element);
+              }
+            });
 
-              result.forEach((element) async {
-                GeoPoint fbUserGeo = element['geoLoc'];
+            result.forEach((element) async {
+              GeoPoint fbUserGeo = element['geoLoc'];
 
-                var lat = fbUserGeo.latitude;
-                var lng = fbUserGeo.longitude;
-                LatLng latLng = new LatLng(lat, lng);
-                LatLng latLng2 = new LatLng(
-                    _dataController?.myLocation?.latitude,
-                    _dataController?.myLocation?.longitude);
-                LatLng latLng3 =
-                    new LatLng(_dataController.myLocation2.latitude,_dataController.myLocation2.longitude);
+              var lat = fbUserGeo.latitude;
+              var lng = fbUserGeo.longitude;
+              LatLng latLng = new LatLng(lat, lng);
+              LatLng latLng2 = new LatLng(
+                  _dataController?.myLocation?.latitude,
+                  _dataController?.myLocation?.longitude);
+              LatLng latLng3 = new LatLng(
+                  _dataController.myLocation2.latitude,
+                  _dataController.myLocation2.longitude);
 
-                var distanceBetweenPoints;
-                try {
-                  distanceBetweenPoints =
-                      SphericalUtil.computeDistanceBetween(latLng, latLng2);
-                } catch (e) {
-                  distanceBetweenPoints =
-                      SphericalUtil.computeDistanceBetween(latLng, latLng3);
-                }
-                print(distanceBetweenPoints);
+              var distanceBetweenPoints;
+              try {
+                distanceBetweenPoints =
+                    SphericalUtil.computeDistanceBetween(latLng, latLng2);
+              } catch (e) {
+                distanceBetweenPoints =
+                    SphericalUtil.computeDistanceBetween(latLng, latLng3);
+              }
+              print(distanceBetweenPoints);
 
-                LatLngModel _ltLng =
-                    LatLngModel(doc: element, distance: distanceBetweenPoints);
+              LatLngModel _ltLng =
+                  LatLngModel(doc: element, distance: distanceBetweenPoints);
 
-                if (_ltLng.distance <= _dataController.distanceUser.value) {
-                  _dataController.distanceUsersListGetBuilder.add(_ltLng.doc);
-                }
-              });
+              if (_ltLng.distance <= _dataController.distanceUser.value) {
+                _dataController.distanceUsersListGetBuilder.add(_ltLng.doc);
+              }
+            });
 
-              return Column(
-                children: _dataController.distanceUsersListGetBuilder
-                    .map<Widget>(
-                      (value) => UserWidget(
-                        imgAvatar: value['urlAvatar'],
-                        name: value['name'],
-                        age: value['age'],
-                        countryCode: value['countryCode'],
-                        country: value['country'],
-                        userId: value['id'],
-                      ),
-                    )
-                    .toList(),
-              );
 
-              ListView.builder(
-                itemCount: _dataController?.distanceUsersListGetBuilder?.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return UserWidget(
-                    imgAvatar: _dataController
-                        ?.distanceUsersListGetBuilder[index]['urlAvatar'],
-                    name: _dataController?.distanceUsersListGetBuilder[index]
-                        ['name'],
-                    age: _dataController?.distanceUsersListGetBuilder[index]
-                        ['age'],
-                    countryCode: _dataController
-                        ?.distanceUsersListGetBuilder[index]['countryCode'],
-                    country: _dataController?.distanceUsersListGetBuilder[index]
-                        ['country'],
-                    userId: _dataController?.distanceUsersListGetBuilder[index]
-                        ['id'],
-                  );
-                },
-              );
-            }
-            return Container();
-          },
-        ),
+            // return Column(
+            //   children: _dataController.distanceUsersListGetBuilder
+            //       .map<Widget>(
+            //         (value) => UserWidget(
+            //           imgAvatar: value['urlAvatar'],
+            //           name: value['name'],
+            //           age: value['age'],
+            //           countryCode: value['countryCode'],
+            //           country: value['country'],
+            //           userId: value['id'],
+            //         ),
+            //       )
+            //       .toList(),
+            // );
+
+
+           return ListView.builder(
+              itemCount: _dataController.distanceUsersListGetBuilder.length,
+              itemBuilder: (BuildContext context, int index) {
+                return UserWidget(
+                  imgAvatar: _dataController
+                      .distanceUsersListGetBuilder[index]['urlAvatar'],
+                  name: _dataController.distanceUsersListGetBuilder[index]
+                      ['name'],
+                  age: _dataController.distanceUsersListGetBuilder[index]
+                      ['age'],
+                  countryCode: _dataController
+                      .distanceUsersListGetBuilder[index]['countryCode'],
+                  country: _dataController.distanceUsersListGetBuilder[index]
+                      ['country'],
+                  userId: _dataController.distanceUsersListGetBuilder[index]
+                      ['id'],
+                );
+              },
+            );
+          }
+          return Container();
+        },
       ),
     );
   }

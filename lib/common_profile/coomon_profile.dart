@@ -27,6 +27,7 @@ class _ProfileCommonState extends State<ProfileCommon> {
 
   String currentUser;
   DocumentSnapshot currentFavorUser;
+  DocumentSnapshot currentFavorUser2;
   String content;
 
   String superNewUser = Get.arguments;
@@ -34,8 +35,10 @@ class _ProfileCommonState extends State<ProfileCommon> {
   bool buttonEnabled = true;
   bool buttonEnabled2 = true;
   bool buttonFavorStatus = false;
+  bool blocked = false;
 
   GetStorage favorStatus = GetStorage();
+
 
   var hashChatID;
 
@@ -46,9 +49,11 @@ class _ProfileCommonState extends State<ProfileCommon> {
   }
 
   List userToFav = [];
+  List userToFavSecondUser = [];
 
   putUserToFavor() async {
     userToFav.add(superNewUser);
+    userToFavSecondUser.add(currentUser);
     favorStatus.write('$superNewUser', true);
 
     FirebaseFirestore.instance
@@ -72,6 +77,29 @@ class _ProfileCommonState extends State<ProfileCommon> {
         'ownerFavor': currentUser,
         'phoneNumber': currentFavorUser.data()['phoneNumber'],
         'urlAvatar': currentFavorUser.data()['urlAvatar'],
+      });
+    }).whenComplete(() {
+      _firebaseFirestore.collection('userCollection')
+          .doc(superNewUser)
+          .update({'favor': FieldValue.arrayUnion(userToFavSecondUser)});
+    }).whenComplete(() {
+      _firebaseFirestore
+          .collection('userCollection')
+          .doc(superNewUser)
+          .collection('favorites')
+          .doc(currentUser)
+          .set({
+        'about': currentFavorUser2.data()['about'],
+        'age': currentFavorUser2.data()['age'],
+        'country': currentFavorUser2.data()['country'],
+        'countryCode': currentFavorUser2.data()['countryCode'],
+        'email': currentFavorUser2.data()['email'],
+        'gender': currentFavorUser2.data()['gender'],
+        'id': currentFavorUser2.data()['id'],
+        'name': currentFavorUser2.data()['name'],
+        'ownerFavor': superNewUser,
+        'phoneNumber': currentFavorUser2.data()['phoneNumber'],
+        'urlAvatar': currentFavorUser2.data()['urlAvatar'],
       });
     });
   }
@@ -156,6 +184,12 @@ class _ProfileCommonState extends State<ProfileCommon> {
     }
   }
 
+  getUserData()async{
+    currentFavorUser2 = await _firebaseFirestore.collection('userCollection').doc(currentUser).get();
+
+
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -163,6 +197,11 @@ class _ProfileCommonState extends State<ProfileCommon> {
     getUserUid();
     getCurrentFavorUser();
     getPath();
+    _firebaseFirestore.collection('userCollection').doc(currentUser).snapshots().listen((event) {
+      print(event.data()['blocked']);
+      blocked = event.data()['blocked'];
+    });
+    getUserData();
   }
 
   @override
@@ -192,6 +231,7 @@ class _ProfileCommonState extends State<ProfileCommon> {
             PhotoAlbumWidgetCommon(
               userId: Get.arguments.toString(),
             ),
+            if(currentUser != superNewUser)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
               child: SizedBox(
@@ -200,7 +240,6 @@ class _ProfileCommonState extends State<ProfileCommon> {
                 child: RaisedButton(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0)),
-                  color: Colors.black45,
                   child: buttonEnabled == true
                       ? Text(
                           'Отправить сообщение',
@@ -209,38 +248,43 @@ class _ProfileCommonState extends State<ProfileCommon> {
                       : SizedBox(
                           width: 15,
                           height: 15,
-                          child: CircularProgressIndicator()),
+                          child: CircularProgressIndicator(backgroundColor: Colors.white,)),
                   onPressed: () {
-                    print('1111${widget.reciverName}');
-                    putUserToFavor();
+                    if(blocked == false){
+                      putUserToFavor();
+                      var data = Get.to(
+                        ChatRoom(
+                          resiverName: widget.reciverName,
+                          resiverId: superNewUser,
+                          senderId: currentUser,
+                          senderName: widget.senderName,
+                          fromWhere: 1,
+                        ),
+                      ).then((value) {
+                        setState(() {
 
-                    var data = Get.to(
-                      ChatRoom(
-                        resiverName: widget.reciverName,
-                        resiverId: superNewUser,
-                        senderId: currentUser,
-                        senderName: widget.senderName,
-                        fromWhere: 1,
-                      ),
-                    ).then((value) {
-                      setState(() {
-
+                        });
                       });
-                    });
+                    }else{
+                      Get.snackbar('Внимание', 'Ваш аккаунт заблокирован. Обратитесь к администрации.',backgroundColor: Colors.red,colorText: Colors.white);
+
+                    }
+
                   },
                 ),
               ),
             ),
+            if(currentUser != superNewUser)
             favorStatus.read('$superNewUser') == true
+
                 ? Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    padding: const EdgeInsets.only(left: 30,right: 30,bottom: 20),
                     child: SizedBox(
                       height: 50,
                       width: double.infinity,
                       child: RaisedButton(
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0)),
-                        color: Colors.black45,
                         child: buttonEnabled == true
                             ? Text(
                                 'Убрать из избранного',
@@ -250,7 +294,7 @@ class _ProfileCommonState extends State<ProfileCommon> {
                             : SizedBox(
                                 width: 15,
                                 height: 15,
-                                child: CircularProgressIndicator()),
+                                child: CircularProgressIndicator(backgroundColor: Colors.white,)),
                         onPressed: () {
                           deleteContact();
                         },
@@ -258,14 +302,13 @@ class _ProfileCommonState extends State<ProfileCommon> {
                     ),
                   )
                 : Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    padding: const EdgeInsets.only(left: 30,right: 30,bottom: 20),
                     child: SizedBox(
                       height: 50,
                       width: double.infinity,
                       child: RaisedButton(
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0)),
-                        color: Colors.black45,
                         child: buttonEnabled == true
                             ? Text(
                                 'Добавить в избранное',
@@ -275,7 +318,7 @@ class _ProfileCommonState extends State<ProfileCommon> {
                             : SizedBox(
                                 width: 15,
                                 height: 15,
-                                child: CircularProgressIndicator()),
+                                child: CircularProgressIndicator(backgroundColor: Colors.white,)),
                         onPressed: () {
                           addToFavor();
                         },

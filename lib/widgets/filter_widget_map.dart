@@ -92,7 +92,7 @@ class _FilterWidgetMapState extends State<FilterWidgetMap> {
                   ),
                   Column(
                     children: [
-                      Text('Девушки'),
+                      Text('Женщины'),
                       Obx(
                             () => Radio(
                           activeColor: Colors.pinkAccent,

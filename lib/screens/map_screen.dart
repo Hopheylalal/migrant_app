@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +27,7 @@ class _MapScreenState extends State<MapScreen> {
   final box = GetStorage();
   DataController _dataController = Get.put(DataController());
   DataController2 _dataController2 = Get.put(DataController2());
+  FirebaseAuth _auth = FirebaseAuth.instance;
 
 
 
@@ -41,6 +43,11 @@ class _MapScreenState extends State<MapScreen> {
     return (await fi.image.toByteData(format: ui.ImageByteFormat.png))
         .buffer
         .asUint8List();
+  }
+  String userUid;
+  getUserUid()async{
+    final result = _auth.currentUser.uid;
+    userUid = result;
   }
 
   Future getMarkers(data) async {
@@ -99,7 +106,7 @@ class _MapScreenState extends State<MapScreen> {
   Future getMyCoordsLocator()async{
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.medium);
     LatLng _latLng = LatLng(position.latitude,position.longitude);
-    _dataController.setLocation(_latLng);
+    _dataController.setLocation(_latLng,userUid);
     return _latLng;
 
   }
@@ -110,7 +117,9 @@ class _MapScreenState extends State<MapScreen> {
 
       ..height = 300
       ..gravity = Gravity.top
-      ..margin = EdgeInsets.symmetric(vertical: 80)
+      ..margin = Get.size.height >= 896
+        ? EdgeInsets.symmetric(vertical: 100)
+        : EdgeInsets.symmetric(vertical: 80)
       ..widget(
         Padding(
           padding: EdgeInsets.all(0.0),
@@ -253,6 +262,7 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    getUserUid();
 
   }
 
@@ -274,7 +284,7 @@ class _MapScreenState extends State<MapScreen> {
         future: FirebaseFirestore.instance.collection('userCollection').get(),
         builder: (BuildContext context,AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasData) {
             _dataController2.genderUsersList.clear();
@@ -324,12 +334,12 @@ class _MapScreenState extends State<MapScreen> {
                       );
                     }
                   );
-                }return CircularProgressIndicator();
+                }return Center(child: CircularProgressIndicator());
 
               }
             );
           }
-          return CircularProgressIndicator();
+          return Center(child: CircularProgressIndicator());
         },
       ),
     );

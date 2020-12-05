@@ -9,6 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:migrant_app/common/constants.dart';
 import 'package:basic_utils/basic_utils.dart';
 import 'package:migrant_app/controllers/data_controller.dart';
+import 'package:migrant_app/screens/image_viewer.dart';
 
 class ProfileUserWidgetCommon extends StatefulWidget {
 
@@ -58,22 +59,37 @@ class _ProfileUserWidgetCommonState extends State<ProfileUserWidgetCommon> {
           _dataController.userDataControllerUpdate(userData);
           String countryName = userData['country'];
           String about = userData['about'];
+          List photos=[];
+
+          photos.add(userData['urlAvatar']);
           return Card(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child: CircleAvatar(
-                    radius: 40,
-                    child: ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl: userData['urlAvatar'],
-                        progressIndicatorBuilder:
-                            (context, url, downloadProgress) =>
-                                CircularProgressIndicator(
-                                    value: downloadProgress.progress),
-                        errorWidget: (context, url, error) => Icon(Icons.error),
+                  child: GestureDetector(
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ImageViewerWidget(
+                            photos: photos,
+                          ),
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 40,
+                      child: ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: userData['urlAvatar'],
+                          progressIndicatorBuilder:
+                              (context, url, downloadProgress) =>
+                                  CircularProgressIndicator(
+                                      value: downloadProgress.progress),
+                          errorWidget: (context, url, error) => Icon(Icons.error),
+                        ),
                       ),
                     ),
                   ),
@@ -95,6 +111,14 @@ class _ProfileUserWidgetCommonState extends State<ProfileUserWidgetCommon> {
                         ),
                         Row(
                           children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: SizedBox(
+                                height: 30,
+                                width: 30,
+                                child: Flag('${userData['countryCode']}'),
+                              ),
+                            ),
                             countryName.length > 24
                                 ? Expanded(
                                     child: Text(
@@ -106,17 +130,8 @@ class _ProfileUserWidgetCommonState extends State<ProfileUserWidgetCommon> {
                                     '${userData['country']}',
                                     overflow: TextOverflow.fade,
                                   ),
-                            SizedBox(
-                              width: 6,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: SizedBox(
-                                height: 30,
-                                width: 30,
-                                child: Flag('${userData['countryCode']}'),
-                              ),
-                            ),
+
+
                           ],
                         ),
                         Text(

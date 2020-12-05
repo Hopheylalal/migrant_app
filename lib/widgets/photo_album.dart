@@ -45,7 +45,7 @@ class _PhotoAlbumWidgetState extends State<PhotoAlbumWidget> {
         materialOptions: MaterialOptions(
           startInAllView: true,
           allViewTitle: 'Выберете фото',
-          actionBarColor: "#2196f3",
+          actionBarColor: "#f2255d",
           useDetailsView: false,
           selectCircleStrokeColor: "#000000",
         ),
@@ -141,12 +141,13 @@ class _PhotoAlbumWidgetState extends State<PhotoAlbumWidget> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Color(0xfff0f0f0),
       child: Row(
         children: [
           IconButton(
               icon: Icon(
                 Icons.add_circle,
-                color: Colors.blue,
+
               ),
               onPressed: () {
                 loadAssets().whenComplete(() {
@@ -191,14 +192,19 @@ class _PhotoAlbumWidgetState extends State<PhotoAlbumWidget> {
                                 showPicOptionsDialog(phList);
                               },
                               onTap: () {
+
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ImageViewer(
+                                    builder: (context) => ImageViewerWidget(
                                       url: photos,
+                                      photos: userImageUrl,
+                                      startPage: userImageUrl.indexOf(photos),
+
                                     ),
                                   ),
                                 );
+
                               },
 
 

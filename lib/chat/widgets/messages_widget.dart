@@ -25,6 +25,7 @@ class MessagesWidget extends StatefulWidget {
 class _MessagesWidgetState extends State<MessagesWidget> {
   List<String> idsArray = [];
   FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
   bool isMe;
   String currentUser;
@@ -52,6 +53,12 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     chatHash = chatId;
   }
 
+  String avatarReciver;
+  void getSenderAvatar()async{
+    final result = await _firebaseFirestore.collection('userCollection').doc(widget.resiverId).get();
+    avatarReciver = result['urlAvatar'];
+  }
+
 
   
 
@@ -63,6 +70,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     idsArray.add(widget.resiverId);
     idsArray.add(widget.idUser);
     print(idsArray);
+    getSenderAvatar();
     getHash();
     getTreuChat();
 
@@ -94,7 +102,8 @@ class _MessagesWidgetState extends State<MessagesWidget> {
                     return ChatMessageWidget(
                       message: message['message'],
                       isMe: currentUser == message['sender'],
-                      senderUrl: widget.resiverId,
+                      senderUrl: widget.senderAvatar,
+                      resiverUrl: avatarReciver,
                     );
                   },
                 );

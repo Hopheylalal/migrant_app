@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -44,9 +45,22 @@ class DataController extends GetxController {
     print(distanceUser.value);
   }
 
-  setLocation(LatLng loc) {
+  setLocation(LatLng loc, user) {
     distanceUsersListGetBuilder.clear();
     myLocation = loc;
+
+      print('getGeoLocAppStart');
+      FirebaseFirestore.instance
+          .collection('userCollection')
+          .doc(user)
+          .update({
+        'geoLoc': GeoPoint(myLocation2.latitude, myLocation2.longitude),
+      }).then((value) {
+        print(GeoPoint(myLocation2.latitude, myLocation2.longitude));
+      }).catchError((e) {
+        print(e.message);
+      });
+
     update();
   }
   setLocation2(LatLng loc) {
@@ -120,5 +134,15 @@ class DataController extends GetxController {
     update();
   }
 
+  bool messageCouner;
+
+  setMessageList(value){
+    messageCouner = value;
+    update();
+  }
+
+
+
 
 }
+

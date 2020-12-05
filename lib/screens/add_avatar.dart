@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -8,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../home.dart';
 
@@ -23,6 +23,13 @@ class _AddAvatarState extends State<AddAvatar> {
   bool inProcess = false;
 
   bool isLoading = false;
+
+  var maskFormatter = new MaskTextInputFormatter(
+    mask: '#-#',
+    filter: {
+      "#": RegExp(r'[0-9]'),
+    },
+  );
 
   void loadPicker(ImageSource source) async {
     setState(() {
@@ -44,13 +51,28 @@ class _AddAvatarState extends State<AddAvatar> {
 
   void cropImage(File pick) async {
     File croped = await ImageCropper.cropImage(
-        sourcePath: pick.path,
-        aspectRatio: CropAspectRatio(ratioX: 1.0, ratioY: 1.0),
-        androidUiSettings: AndroidUiSettings(toolbarTitle: 'Редактор'),
-        iosUiSettings: IOSUiSettings(title: 'Редактор'));
+      sourcePath: pick.path,
+      compressQuality: 70,
+      
+      maxHeight: 600,
+      maxWidth: 600,
+      aspectRatio: CropAspectRatio(ratioX: 1.0, ratioY: 1.0),
+      androidUiSettings: AndroidUiSettings(toolbarTitle: 'Редактор',cropFrameColor: Color(0xfff2255d)),
+      iosUiSettings: IOSUiSettings(title: 'Редактор',),
+    ).catchError((_) {
+      setState(() {
+        inProcess = false;
+      });
+      Get.back();
+    });
     if (croped != null) {
       cropedImage = croped;
       addImageToFirebase();
+    } else {
+      setState(() {
+        inProcess = false;
+      });
+      Get.back();
     }
   }
 
@@ -74,7 +96,6 @@ class _AddAvatarState extends State<AddAvatar> {
         {'urlAvatar': urlImg},
       ).whenComplete(() {
         Get.offAll(Home());
-
       });
     } catch (e) {
       Get.snackbar('Ошибка', e.toString());
@@ -159,7 +180,6 @@ class _AddAvatarState extends State<AddAvatar> {
                       child: RaisedButton(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.0)),
-                          color: Colors.deepPurple,
                           child: Text(
                             'Добавить фото',
                             style: TextStyle(

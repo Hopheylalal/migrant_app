@@ -32,7 +32,7 @@ class _TwitsScreenState extends State<TwitsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Просмотр записей'),
+        title: Text('Лента'),
         centerTitle: true,
         actions: [
           FlatButton.icon(
@@ -81,6 +81,9 @@ class _TwitsScreenState extends State<TwitsScreen> {
                         countryCode: twits[index]['countryCode'],
                         userId: twits[index]['ownerId'],
                         twitId: twits[index]['twitId'],
+                        age: twits[index]['age'],
+                        country: twits[index]['country'],
+
                       );
                     },
                   );
@@ -112,6 +115,9 @@ class _TwitsScreenState extends State<TwitsScreen> {
                         content: twits[index]['content'],
                         countryCode: twits[index]['countryCode'],
                         userId: twits[index]['ownerId'],
+                        twitId: twits[index]['twitId'],
+                        age: twits[index]['age'],
+                        country: twits[index]['country'],
                       );
                     },
                   );

@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:migrant_app/chat/models/message.dart';
 import 'package:migrant_app/controllers/data_controller.dart';
+import 'package:migrant_app/screens/image_viewer.dart';
 
-class ChatMessageWidget extends StatelessWidget {
+class ChatMessageWidget extends StatefulWidget {
   final message;
   final resiverUrl;
   final senderUrl;
@@ -16,28 +17,36 @@ class ChatMessageWidget extends StatelessWidget {
   });
 
   @override
+  _ChatMessageWidgetState createState() => _ChatMessageWidgetState();
+}
+
+class _ChatMessageWidgetState extends State<ChatMessageWidget> {
+
+
+
+  @override
   Widget build(BuildContext context) {
+
     final radius = Radius.circular(12);
     final borderRadius = BorderRadius.all(radius);
 
     return Row(
-      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisAlignment: widget.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: <Widget>[
-        if (!isMe)
-          Padding(
-            padding: const EdgeInsets.only(left: 10,right: 0, top: 10,bottom: 10),
-            child: Obx(()=>
-               CircleAvatar(
-                  radius: 24, backgroundImage: NetworkImage(Get.find<DataController>().urlAvatar.value)),
-            ),
-          ),
+        // if (!widget.isMe)
+        //   Padding(
+        //     padding: const EdgeInsets.only(left: 10,right: 0, top: 10,bottom: 10),
+        //     child:
+        //        CircleAvatar(
+        //           radius: 24, backgroundImage: NetworkImage(widget.resiverUrl)),
+        //   ),
         Container(
           padding: EdgeInsets.all(12),
           margin: EdgeInsets.all(12),
           constraints: BoxConstraints(maxWidth: 250),
           decoration: BoxDecoration(
-            color: isMe ? Colors.grey[100] : Theme.of(context).accentColor,
-            borderRadius: isMe
+            color: widget.isMe ? Colors.grey[100] : Color(0xffdba7b5),
+            borderRadius: widget.isMe
                 ? borderRadius.subtract(BorderRadius.only(bottomRight: radius))
                 : borderRadius.subtract(BorderRadius.only(bottomLeft: radius)),
           ),
@@ -49,24 +58,39 @@ class ChatMessageWidget extends StatelessWidget {
 
   Widget buildMessage() => Column(
     crossAxisAlignment:
-    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+    widget.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
     children: <Widget>[
-      message.toString().length > 4  ?
-      message.toString().substring(0,4) == 'http' ?
+      widget.message.toString().length > 4  ?
+      widget.message.toString().substring(0,4) == 'http' ?
       Container(
 
-        child: CachedNetworkImage(
-          imageUrl: "$message",
-          placeholder: (context, url) => CircularProgressIndicator(),
-          errorWidget: (context, url, error) => Icon(Icons.error),
+        child: GestureDetector(
+          onTap: (){
+            List img = [];
+            img.add(widget.message);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ImageViewerWidget(
+                  photos: img,
+                  type: 'message',
+                ),
+              ),
+            );
+          },
+          child: CachedNetworkImage(
+            imageUrl: "${widget.message}",
+            placeholder: (context, url) => CircularProgressIndicator(),
+            errorWidget: (context, url, error) => Icon(Icons.error),
+          ),
         ),
       ) :
       Text(
-        message,
-        style: TextStyle(color: isMe ? Colors.black : Colors.white),
-        textAlign: isMe ? TextAlign.end : TextAlign.start,
+        widget.message,
+        style: TextStyle(color: widget.isMe ? Colors.black : Colors.black),
+        textAlign: widget.isMe ? TextAlign.end : TextAlign.start,
       ): Text(
-        '$message',
+        '${widget.message}',
         style: TextStyle(fontSize: 18),
       )
 

@@ -83,15 +83,18 @@ class _PhotoAlbumWidgetCommonState extends State<PhotoAlbumWidgetCommon> {
                           scrollDirection: Axis.horizontal,
                           shrinkWrap: true,
                           children: userImageUrl.map<Widget>((photos) {
-                            List phList = [];
+                            List<String> phList = [];
                             phList.add(photos);
                             return GestureDetector(
                               onTap: (){
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ImageViewer(
+                                    builder: (context) => ImageViewerWidget(
                                       url: photos,
+                                      photos: userImageUrl,
+                                      startPage: userImageUrl.indexOf(photos),
+
                                     ),
                                   ),
                                 );

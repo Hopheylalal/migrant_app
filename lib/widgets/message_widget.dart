@@ -9,6 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:migrant_app/chat/chat_room.dart';
 import 'package:badges/badges.dart';
 import 'package:migrant_app/controllers/data_controller.dart';
+import 'package:migrant_app/controllers/message_controller.dart';
 
 class MessageWidget extends StatefulWidget {
   final imgAvatar;
@@ -39,6 +40,9 @@ class MessageWidget extends StatefulWidget {
 class _MessageWidgetState extends State<MessageWidget> {
   void deleteContact() async {
     FirebaseFirestore _firebase = FirebaseFirestore.instance;
+
+
+    MessageController _mc = Get.find();
 
     List delToArray = [];
     delToArray.add(widget.userId);
@@ -125,15 +129,20 @@ class _MessageWidgetState extends State<MessageWidget> {
         .doc(hashChatID.toString())
         .collection('messages')
         .get();
-   final List newMessageList = result.docs;
+    final List newMessageList = result.docs;
 
-   print(newMessageList.length);
-   print(newMessageList);
-   newMessageList.forEach((element) {
-     _firebase.collection('chats').doc(hashChatID.toString()).collection('messages').doc(element.id).update({
-       '${widget.currentUserId}' : false,
-     });
-   });
+    print(newMessageList.length);
+    print(newMessageList);
+    newMessageList.forEach((element) {
+      _firebase
+          .collection('chats')
+          .doc(hashChatID.toString())
+          .collection('messages')
+          .doc(element.id)
+          .update({
+        '${widget.currentUserId}': false,
+      });
+    });
   }
 
   @override
@@ -143,28 +152,32 @@ class _MessageWidgetState extends State<MessageWidget> {
     getUserUid();
     getCurrentFavorUser();
     getPath();
+
   }
 
   @override
   Widget build(BuildContext context) {
-
     return InkWell(
       onTap: () {
-
         putUserToFavor();
-        Get.to(
-          ChatRoom(
-            resiverName: widget.name,
-            resiverId: widget.userId,
-            senderId: widget.currentUserId,
-            senderName: widget.currentUserName,
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatRoom(
+              resiverName: widget.name,
+              resiverId: widget.userId,
+              senderId: widget.currentUserId,
+              senderName: widget.currentUserName,
+            ),
           ),
-        );
+        ).then((value) {
+          setState(() {});
+        });
         clearNewMessage();
       },
       onLongPress: () {
         Get.defaultDialog(
-          title: 'Удалить из контактов?',
+          title: 'Удалить из избранного?',
           content: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -190,6 +203,7 @@ class _MessageWidgetState extends State<MessageWidget> {
         );
       },
       child: Card(
+        color: Color(0xfff0f0f0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

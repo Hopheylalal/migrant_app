@@ -23,16 +23,32 @@ class _ProfileState extends State<Profile> {
   FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
   String userUid;
 
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+
   String content;
+  String messageContent;
+
+  bool buttonEnable = true;
+
 
   bool buttonEnabled = true;
   bool buttonEnabled2 = true;
+  bool buttonEnabled3 = true;
+
+  bool blocked = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getUserUid();
+    // getBlockStatus();
+    _firebaseFirestore.collection('userCollection').doc(userUid).snapshots().listen((event) {
+      print(event.data()['blocked']);
+      blocked = event.data()['blocked'];
+    });
+    
   }
 
   getUserUid() {
@@ -41,6 +57,9 @@ class _ProfileState extends State<Profile> {
       userUid = userIdFuture;
     });
   }
+  
+
+  
 
   void signOut() async {
     try {
@@ -66,10 +85,52 @@ class _ProfileState extends State<Profile> {
       'urlAvatar' : _dataController.userDataController['urlAvatar'],
       'twitId' : twitId,
       'countryCode' : _dataController.userDataController['countryCode'],
+      'age' : _dataController.userDataController['age'],
+      'country' : _dataController.userDataController['country'],
+
     }).whenComplete(() {
       Get.snackbar('Оповещение', 'Ваше сообщение отправленно',backgroundColor: Colors.lightGreen, colorText: Colors.white);
     });
   }catch(e){
+      Get.snackbar('Ошибка', 'Попробуйте позже',backgroundColor: GetSnackbarConst.getSnackErrorBack,colorText: GetSnackbarConst.getSnackErrorText);
+    }
+  }
+
+  void _validateInputs() async {
+    if (_formKey.currentState.validate()) {
+//    If all data are correct then save data to out variables
+      _formKey.currentState.save();
+      addTwit();
+      setState(() {
+        buttonEnable = true;
+      });
+
+
+    }else{
+      setState(() {
+        buttonEnable = true;
+      });
+    }
+  }
+
+  void addMessageToAdmin(){
+    try{
+      String messageId = DateTime.now().millisecondsSinceEpoch.toString();
+      _firebaseFirestore.collection('messageToAdmin').doc(messageId).set({
+        'ownerId' : userUid,
+        'content' : messageContent,
+        'createDate' : FieldValue.serverTimestamp(),
+        'name' : _dataController.userDataController['name'],
+        'urlAvatar' : _dataController.userDataController['urlAvatar'],
+        'twitId' : messageId,
+        'countryCode' : _dataController.userDataController['countryCode'],
+        'age' : _dataController.userDataController['age'],
+        'country' : _dataController.userDataController['country'],
+        'email' : _dataController.userDataController['email'],
+      }).whenComplete(() {
+        Get.snackbar('Оповещение', 'Ваше сообщение отправленно',backgroundColor: Colors.lightGreen, colorText: Colors.white);
+      });
+    }catch(e){
       Get.snackbar('Ошибка', 'Попробуйте позже',backgroundColor: GetSnackbarConst.getSnackErrorBack,colorText: GetSnackbarConst.getSnackErrorText);
     }
   }
@@ -81,6 +142,80 @@ class _ProfileState extends State<Profile> {
       appBar: AppBar(
         title: Text('Мой профиль'),
         centerTitle: true,
+        leading: IconButton(icon: Icon(Icons.help), onPressed: (){
+          Get.bottomSheet(
+              SingleChildScrollView(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Text('Поддержка',style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          enableSuggestions: true,
+                          textCapitalization:
+                          TextCapitalization.sentences,
+                          keyboardType: TextInputType.multiline,
+                          minLines: 4,
+                          maxLines: 4,
+                          onChanged: (val) {
+                            messageContent = val;
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Начните набирать ваше сообщение',
+                            border: new OutlineInputBorder(
+                              borderRadius: const BorderRadius.all(
+                                const Radius.circular(30.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: SizedBox(
+                          height: 50,
+                          width: double.infinity,
+                          child: RaisedButton(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0)),
+                            child: buttonEnabled2 == true
+                                ? Text(
+                              'Отправить',
+                              style:
+                              TextStyle(color: Colors.white, fontSize: 18),
+                            )
+                                : SizedBox(
+                                width: 15,
+                                height: 15,
+                                child: CircularProgressIndicator()),
+                            onPressed: () {
+                              if(messageContent == null || messageContent == ''){
+                                Get.snackbar('Внимание', 'Введите сообщение',backgroundColor:Colors.blueAccent,colorText: GetSnackbarConst.getSnackErrorText);
+                              }else{
+                                addMessageToAdmin();
+                                messageContent = null;
+                                Get.back();
+
+                              }
+
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+          );
+        },),
         actions: [
           IconButton(
             icon: Icon(Icons.edit),
@@ -104,108 +239,122 @@ class _ProfileState extends State<Profile> {
         ],
       ),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            ProfileUserWidget(),
-            PhotoAlbumWidget(userId: userUid,),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30,vertical: 30),
-              child: SizedBox(
-                height: 50,
-                width: double.infinity,
-                child: RaisedButton(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0)),
-                  color: Colors.black45,
-                  child: buttonEnabled == true
-                      ? Text(
-                    'Добавить запись',
-                    style:
-                    TextStyle(color: Colors.white, fontSize: 18),
-                  )
-                      : SizedBox(
-                      width: 15,
-                      height: 15,
-                      child: CircularProgressIndicator()),
-                  onPressed: () {
-                    Get.bottomSheet(
-                      SingleChildScrollView(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          color: Colors.white,
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                child: Text('Введите сообщение',style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: TextFormField(
-                                  enableSuggestions: true,
-                                  textCapitalization:
-                                  TextCapitalization.sentences,
-                                  keyboardType: TextInputType.multiline,
-                                  minLines: 4,
-                                  maxLines: 4,
-                                  onChanged: (val) {
-                                    content = val;
-                                  },
-                                    decoration: InputDecoration(
-                                      hintText: 'Начните набирать ваше сообщение',
-                                      border: new OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                          const Radius.circular(30.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              ProfileUserWidget(),
+              PhotoAlbumWidget(userId: userUid,),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30,vertical: 30),
+                child: SizedBox(
+                  height: 50,
+                  width: double.infinity,
+                  child: RaisedButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0)),
+                    child: buttonEnabled == true
+                        ? Text(
+                      'Добавить запись',
+                      style:
+                      TextStyle(color: Colors.white, fontSize: 18),
+                    )
+                        : SizedBox(
+                        width: 15,
+                        height: 15,
+                        child: CircularProgressIndicator()),
+                    onPressed: () {
+                      if(blocked == false){
+                        Get.bottomSheet(
+                            SingleChildScrollView(
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                color: Colors.white,
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      child: Text('Введите сообщение',style: TextStyle(
+                                          fontSize: 16, fontWeight: FontWeight.bold),),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: TextFormField(
+                                        maxLength: 280,
+                                        validator: (String arg) {
+                                          if (arg.length > 280)
+                                            return 'Максимальной число символов 280';
+
+                                          else
+                                            return null;
+                                        },
+                                        enableSuggestions: true,
+                                        textCapitalization:
+                                        TextCapitalization.sentences,
+                                        keyboardType: TextInputType.multiline,
+                                        minLines: 4,
+                                        maxLines: 4,
+                                        onChanged: (val) {
+                                          content = val;
+                                        },
+                                        decoration: InputDecoration(
+                                          hintText: 'Начните набирать ваше сообщение',
+                                          border: new OutlineInputBorder(
+                                            borderRadius: const BorderRadius.all(
+                                              const Radius.circular(30.0),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
+
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 20),
+                                      child: SizedBox(
+                                        height: 50,
+                                        width: double.infinity,
+                                        child: RaisedButton(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12.0)),
+                                          child: buttonEnabled2 == true
+                                              ? Text(
+                                            'Отправить',
+                                            style:
+                                            TextStyle(color: Colors.white, fontSize: 18),
+                                          )
+                                              : SizedBox(
+                                              width: 15,
+                                              height: 15,
+                                              child: CircularProgressIndicator()),
+                                          onPressed: () {
+                                            if(content == null || content == ''){
+                                              Get.snackbar('Внимание', 'Введите сообщение',backgroundColor:Colors.blueAccent,colorText: GetSnackbarConst.getSnackErrorText);
+                                            }else{
+                                              _validateInputs();
+                                              content = null;
+                                              Get.back();
+
+                                            }
+
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                            )
+                        );
+                      }else{
+                        Get.snackbar('Внимание', 'Ваш аккаунт заблокирован. Обратитесь к администрации.',backgroundColor: Colors.red,colorText: Colors.white);
+                      }
 
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 20),
-                                child: SizedBox(
-                                  height: 50,
-                                  width: double.infinity,
-                                  child: RaisedButton(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.0)),
-                                    color: Colors.black45,
-                                    child: buttonEnabled2 == true
-                                        ? Text(
-                                      'Отправить',
-                                      style:
-                                      TextStyle(color: Colors.white, fontSize: 18),
-                                    )
-                                        : SizedBox(
-                                        width: 15,
-                                        height: 15,
-                                        child: CircularProgressIndicator()),
-                                    onPressed: () {
-                                      if(content == null || content == ''){
-                                        Get.snackbar('Внимание', 'Введите сообщение',backgroundColor:Colors.blueAccent,colorText: GetSnackbarConst.getSnackErrorText);
-                                      }else{
-                                        addTwit();
-                                        content = null;
-                                        Get.back();
-
-                                      }
-
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    );
-                  },
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

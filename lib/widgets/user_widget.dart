@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flag/flag.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_country_picker/country.dart';
 import 'package:get/get.dart';
 import 'package:migrant_app/common_profile/coomon_profile.dart';
 
@@ -20,6 +21,7 @@ class UserWidget extends StatelessWidget {
         Get.to(ProfileCommon(reciverName: name,),arguments: userId);
       },
       child: Card(
+        color: Color(0xfff0f0f0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -61,7 +63,8 @@ class UserWidget extends StatelessWidget {
                           child: SizedBox(
                             height: 30,
                             width: 30,
-                            child: Flag('$countryCode'),
+                            child:
+                            Flag('$countryCode'),
                           ),
                         ),
                         country.length > 24
@@ -87,6 +90,6 @@ class UserWidget extends StatelessWidget {
           ],
         ),
       ),
-    );;
+    );
   }
 }

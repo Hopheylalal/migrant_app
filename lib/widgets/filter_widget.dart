@@ -95,7 +95,7 @@ class _FilterWidgetState extends State<FilterWidget> {
                   ),
                   Column(
                     children: [
-                      Text('Девушки'),
+                      Text('Женщины'),
                       Obx(
                         () => Radio(
                           activeColor: Colors.pinkAccent,

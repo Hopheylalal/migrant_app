@@ -27,13 +27,26 @@ class _TinderScreenState extends State<TinderScreen> {
       userUid = userIdFuture;
     });
   }
+  List userFavorList = [];
+  getUSerFavorList()async{
+    final result = await _firebaseFirestore.collection('userCollection').doc(userUid).get();
+    userFavorList.addAll(result.data()['favor']);
+    print(userFavorList);
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getUserUid();
+    getUSerFavorList();
 
+  }
+
+  SwipDirection _direction = SwipDirection.Left;
+
+  swipeLeft(){
+    _tCardController.forward(direction: _direction);
   }
 
   @override
@@ -44,7 +57,7 @@ class _TinderScreenState extends State<TinderScreen> {
         child: Center(
           child: StreamBuilder(
               stream: FirebaseFirestore.instance
-                  .collection('userCollection')
+                  .collection('userCollection').where('id',isNotEqualTo: userUid)
                   .snapshots(),
               builder:
                   (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -54,25 +67,29 @@ class _TinderScreenState extends State<TinderScreen> {
 
                 if (snapshot.hasData) {
                   List cards = snapshot.data.docs;
+                  if(cards.length == 0){
+                    return SizedBox();
+                  }
                   List favorInCards = [];
+
                   cards.forEach((element) {
                     if (element['id'] == userUid) {
-                      favorInCards.addAll(element['favor']);
+                      favorInCards.add(element['favor']);
                     }
                   });
 
                   return TCard(
                     controller: _tCardController,
                     onForward: (int, info) {
-                      if (info.direction == SwipDirection.Left) {
+                      if (info.direction == SwipDirection.Right) {
+                        print(userFavorList);
                         String useIdToCard = cards[int - 1]['id'];
+
                         List addUserIdToFavor = [];
+
                         addUserIdToFavor.add(useIdToCard);
 
-                        print(favorInCards);
-                        print(useIdToCard);
-
-                        if (favorInCards.contains(useIdToCard)) {
+                        if (userFavorList.contains(useIdToCard)) {
                           Get.snackbar(
                               'Оповещение', 'Пользователь уже был добавлен ранее',
                               backgroundColor: Colors.orange,
@@ -119,7 +136,8 @@ class _TinderScreenState extends State<TinderScreen> {
                     onEnd: () {
                       _tCardController.reset();
                     },
-                    size: Size(360, 500),
+
+                    size: Size(Get.size.width, Get.size.height),
                     cards: cards.map<Widget>((card) {
                       return TinderContainer(
                         imgUrl: card['urlAvatar'],
@@ -128,6 +146,10 @@ class _TinderScreenState extends State<TinderScreen> {
                         country: card['country'],
                         countryCode: card['countryCode'],
                         id: card['id'],
+                        about: card['about'],
+                        tCardController: _tCardController.forward,
+                        tCardController2: swipeLeft,
+
                       );
                     }).toList(),
                   );

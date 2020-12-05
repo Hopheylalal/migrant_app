@@ -8,6 +8,9 @@ import 'package:migrant_app/chat/widgets/messages_widget.dart';
 import 'package:migrant_app/chat/widgets/new_message_widget.dart';
 import 'package:migrant_app/common_profile/coomon_profile.dart';
 import 'package:migrant_app/controllers/data_controller.dart';
+import 'package:migrant_app/controllers/message_controller.dart';
+
+import '../home.dart';
 
 class ChatRoom extends StatefulWidget {
   final resiverName;
@@ -60,6 +63,8 @@ class _ChatRoomState extends State<ChatRoom> {
   FirebaseAuth _auth = FirebaseAuth.instance;
   String userUid;
 
+  MessageController _mc = Get.find();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -69,11 +74,13 @@ class _ChatRoomState extends State<ChatRoom> {
 
   @override
   Widget build(BuildContext context) {
+    print(Get.size.height);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: Icon(Icons.arrow_back),onPressed: (){
           clearNewMessage();
-          Get.back();
+          _mc.getMessagesFromFireStore();
+          Get.offAll(Home(currentIndex: 3,));
         },),
         title: Text(
           '${widget.resiverName}',

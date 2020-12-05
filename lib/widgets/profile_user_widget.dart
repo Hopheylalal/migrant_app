@@ -3,11 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flag/flag.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_country_picker/country.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:migrant_app/common/constants.dart';
-import 'package:basic_utils/basic_utils.dart';
 import 'package:migrant_app/controllers/data_controller.dart';
 
 class ProfileUserWidget extends StatefulWidget {
@@ -60,6 +57,7 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
           String countryName = userData['country'];
           String about = userData['about'];
           return Card(
+            color: Color(0xfff0f0f0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -96,6 +94,17 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                         ),
                         Row(
                           children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 0),
+                              child: SizedBox(
+                                height: 30,
+                                width: 30,
+                                child: Flag('${userData['countryCode']}'),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 6,
+                            ),
                             countryName.length > 24
                                 ? Expanded(
                                     child: Text(
@@ -107,17 +116,8 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                                     '${userData['country']}',
                                     overflow: TextOverflow.fade,
                                   ),
-                            SizedBox(
-                              width: 6,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: SizedBox(
-                                height: 30,
-                                width: 30,
-                                child: Flag('${userData['countryCode']}'),
-                              ),
-                            ),
+
+
                           ],
                         ),
                         Text(

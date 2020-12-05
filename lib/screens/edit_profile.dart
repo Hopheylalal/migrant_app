@@ -43,6 +43,23 @@ class _EditProfileState extends State<EditProfile> {
 
   String userUid;
 
+  void _validateInputs() async {
+    if (_formKey.currentState.validate()) {
+//    If all data are correct then save data to out variables
+      _formKey.currentState.save();
+      updateFirestoreData(userUid);
+      setState(() {
+        buttonEnable = true;
+      });
+
+
+  }else{
+      setState(() {
+        buttonEnable = true;
+      });
+    }
+  }
+
   getUserUid() async {
     final userIdFuture = _auth.currentUser.uid;
     setState(() {
@@ -275,6 +292,7 @@ class _EditProfileState extends State<EditProfile> {
                         height: 20,
                       ),
                       TextFormField(
+                        maxLength: 280,
                         initialValue: aboutOld ?? '',
                         decoration: InputDecoration(
                             hintText: 'Краткая информация о пользователе',
@@ -285,6 +303,8 @@ class _EditProfileState extends State<EditProfile> {
                             ),
                             prefixIcon: Icon(Icons.info)),
                         textInputAction: TextInputAction.newline,
+                        textCapitalization:
+                        TextCapitalization.sentences,
                         minLines: 1,
                         maxLines: 6,
                         keyboardType: TextInputType.multiline,
@@ -292,8 +312,9 @@ class _EditProfileState extends State<EditProfile> {
                           about = val;
                         },
                         validator: (String arg) {
-                          if (arg.length < 1)
-                            return 'Введите ваше имя';
+                          if (arg.length > 280)
+                            return 'Максимальной число символов 280';
+
                           else
                             return null;
                         },
@@ -341,7 +362,6 @@ class _EditProfileState extends State<EditProfile> {
                               child: RaisedButton(
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12.0)),
-                                color: Colors.black45,
                                 child: buttonEnable == true
                                     ? Text(
                                   'Сохранить',
@@ -355,9 +375,7 @@ class _EditProfileState extends State<EditProfile> {
                                   setState(() {
                                     buttonEnable = false;
                                   });
-                                  updateFirestoreData(
-                                    userUid,
-                                  );
+                                  _validateInputs();
                                 },
                               ),
                             ),

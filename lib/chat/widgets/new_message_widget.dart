@@ -7,6 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:math';
+
+import 'package:migrant_app/controllers/message_controller.dart';
 
 class NewMessageWidget extends StatefulWidget {
   final resiverName;
@@ -41,9 +44,12 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
 
   String currentUserName;
 
+  bool blocked = false;
+
   getUserName()async{
     final result = await FirebaseFirestore.instance.collection('userCollection').doc(currentUser).get();
     currentUserName = result.data()['name'];
+
   }
 
   getUserUid() {
@@ -154,6 +160,8 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
     }
   }
 
+  Random random = new Random();
+
   getPath() {
     String strUser;
     var chatId = widget.senderId.hashCode + widget.resiverId.hashCode;
@@ -161,50 +169,95 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
   }
 
   final _controller = TextEditingController();
+
+  MessageController messageController = Get.find();
+
   String message = '';
+
 
   File image;
   final picker = ImagePicker();
 
   FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
+  void sendMessage2()async{
+    FocusScope.of(context).unfocus();
+
+    if (blocked == false) {
+      if (_controller.text.isNotEmpty) {
+        await _firebaseFirestore
+            .collection('chats')
+            .doc(hashChatID.toString())
+            .set({
+          'convers': [widget.senderId, widget.resiverId],
+        }).whenComplete(() {
+          _firebaseFirestore
+              .collection('chats')
+              .doc(hashChatID.toString())
+              .collection('messages')
+              .doc()
+              .set({
+            'message': message,
+            'sender': widget.senderId,
+            'resiver': widget.resiverId,
+            'createDate': FieldValue.serverTimestamp(),
+            'resiverName': widget.resiverName,
+            'senderName': currentUserName,
+            'resiverAvatr': widget.resiverAvatar,
+            'senderAvatar': widget.senderAvatar,
+            '${widget.senderId}': false,
+            '${widget.resiverId}': true,
+          });
+        });
+        _controller.clear();
+      } else {
+        print('Controller is empty!!!');
+      }
+    } else {
+      Get.snackbar(
+          'Внимание', 'Ваш аккаунт заблокирован. Обратитесь к администрации.',
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
   void sendMessage() async {
     FocusScope.of(context).unfocus();
 
-    if(_controller.text.isNotEmpty){
-      await _firebaseFirestore
-          .collection('chats')
-          .doc(hashChatID.toString())
-          .set({
-        'convers': [widget.senderId, widget.resiverId],
-      }).whenComplete(() {
-        _firebaseFirestore
+    if (blocked == false) {
+      if (_controller.text.isNotEmpty) {
+        await _firebaseFirestore
             .collection('chats')
             .doc(hashChatID.toString())
-            .collection('messages')
-            .doc()
             .set({
-          'message': message,
-          'sender': widget.senderId,
-          'resiver': widget.resiverId,
-          'createDate': FieldValue.serverTimestamp(),
-          'resiverName': widget.resiverName,
-          'senderName': currentUserName,
-          'resiverAvatr': widget.resiverAvatar,
-          'senderAvatar': widget.senderAvatar,
-          '${widget.senderId}' : false,
-          '${widget.resiverId}' : true,
+          'convers': [widget.senderId, widget.resiverId],
+        }).whenComplete(() {
+          _firebaseFirestore
+              .collection('chats')
+              .doc(hashChatID.toString())
+              .collection('messages')
+              .doc()
+              .set({
+            'message': message,
+            'sender': widget.senderId,
+            'resiver': widget.resiverId,
+            'createDate': FieldValue.serverTimestamp(),
+            'resiverName': widget.resiverName,
+            'senderName': currentUserName,
+            'resiverAvatr': widget.resiverAvatar,
+            'senderAvatar': widget.senderAvatar,
+            '${widget.senderId}': false,
+            '${widget.resiverId}': true,
+          });
         });
-      });
-      _controller.clear();
-    }else{
-      print('Controller is empty!!!');
+        _controller.clear();
+      } else {
+        print('Controller is empty!!!');
+      }
+    } else {
+      Get.snackbar(
+          'Внимание', 'Ваш аккаунт заблокирован. Обратитесь к администрации.',
+          backgroundColor: Colors.red, colorText: Colors.white);
     }
-
-    // await FirebaseApi.uploadMessage(widget.idUser, message);
-
-
-
   }
 
   @override
@@ -214,12 +267,21 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
     getUserUid();
     getPath();
     getUserName();
+    _firebaseFirestore.collection('userCollection').doc(currentUser).snapshots().listen((event) {
+      print(event.data()['blocked']);
+      blocked = event.data()['blocked'];
+    });
   }
 
   @override
-  Widget build(BuildContext context) => Container(
-        color: Colors.white,
-        padding: EdgeInsets.all(8),
+  Widget build(BuildContext context) {
+    final h = true;
+    return Container(
+
+      color: Colors.white,
+      padding: EdgeInsets.all(8),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom:10),
         child: Row(
           children: <Widget>[
             Expanded(
@@ -238,9 +300,10 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                onChanged: (value) => setState(() {
-                  message = value;
-                }),
+                onChanged: (value) =>
+                    setState(() {
+                      message = value;
+                    }),
               ),
             ),
             SizedBox(width: 5),
@@ -250,17 +313,21 @@ class _NewMessageWidgetState extends State<NewMessageWidget> {
             ),
             SizedBox(width: 10),
             GestureDetector(
-              onTap: message.trim().isEmpty && _controller.text.isEmpty ? null : sendMessage,
+              onTap: message
+                  .trim()
+                  .isEmpty && _controller.text.isEmpty ? null : sendMessage,
               child: Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.blue,
+                  color: Color(0xfff2255d),
                 ),
                 child: Icon(Icons.send, color: Colors.white),
               ),
             ),
           ],
         ),
-      );
+      ),
+    );
+  }
 }
